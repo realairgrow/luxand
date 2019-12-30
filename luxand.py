@@ -13,6 +13,12 @@ class luxand:
 
 		return person_id
 
+	def delete_person(self, id):
+		return self.send_request("/subject/%d" % id, method = "DELETE")
+
+	def list_persons(self):
+		return self.send_request("/subject", method = "GET", check_status = False)
+
 	def add_photo_to_person(self, id, photo):
 		return self.send_request("/subject/%d" % id, {"photo": photo})["id"]
 
@@ -22,7 +28,22 @@ class luxand:
 	def liveness(self, photo):
 		return self.send_request("/photo/liveness", {"photo": photo}, check_status = False)
 
-	def send_request(self, url, payload, method = "POST", check_status = True):
+	def verify(self, id, photo):
+		return self.send_request("/photo/verify/%d" % id, {"photo": photo}, check_status = False)
+
+	def detect(self, photo):
+		return self.send_request("/photo/detect", {"photo": photo}, check_status = False)
+
+	def emotions(self, photo):
+		return self.send_request("/photo/emotions", {"photo": photo}, check_status = False)["faces"]
+
+	def landmarks(self, photo):
+		return self.send_request("/photo/landmarks", {"photo": photo}, check_status = False)["landmarks"]
+
+	def celebrity(self, photo):
+		return self.send_request("/photo/celebrity", {"photo": photo}, check_status = False)		
+
+	def send_request(self, url, payload = {}, method = "POST", check_status = True):
 		content_type = "application/x-www-form-urlencoded"
 		files = [(a, payload[a]) for a in payload.keys() if a in ["photo"] and os.path.exists(payload[a])]
 		if len(files) > 0:	
@@ -37,7 +58,7 @@ class luxand:
 			"content-type": content_type
 			}
 
-		conn.request("POST", url, payload, headers)
+		conn.request(method, url, payload, headers)
 		res = conn.getresponse()
 		return self.check_response(res.read(), check_status)
 
